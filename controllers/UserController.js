@@ -17,7 +17,16 @@ const { Sequelize } =require("sequelize");
  
  const Register = async(req, res) => {
     const { username, email, password } = req.body;
+    const existingUser = await Users.findOne({
+        where: {
+          email: email,
+        },
+      });
     
+      if (existingUser) {
+        // If the email already exists, return an error response
+        return res.status(400).json({ msg: 'Email already in use' });
+      }
      const hashPassword = await bcrypt.hash(password, 10);
     try {
         await Users.create({
@@ -27,7 +36,9 @@ const { Sequelize } =require("sequelize");
         });
         res.json({msg: "Registration Successful"});
     } catch (error) {
-        console.log(error);
+    
+          console.log(error);
+          res.status(500).json({ msg: "Internal Server Error" });
     }
 }
  
