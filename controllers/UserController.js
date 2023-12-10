@@ -2,7 +2,8 @@ const {Users}=require( "../config.js/UserModel");
 const bcrypt=require("bcrypt");
 const jwt = require("jsonwebtoken");
 const generateToken = require("../config.js/token");
- 
+const { Sequelize } =require("sequelize");
+
  const getUsers = async(req, res) => {
     try {
         const users = await Users.findAll({
@@ -30,40 +31,55 @@ const generateToken = require("../config.js/token");
     }
 }
  
-const Login = async(req, res) => {
+const Login = async (req, res) => {
     try {
-         console.log("Request Body:", req.body);
-
+      const { identifier, password } = req.body;
   
-       
-        const user = await Users.findAll({
-            where:{
-                email:req.body.email
-            },
-        });
-
-        // Check if user with the specified email exists
-    if (user.length === 0) {
-        return res.status(404).json({ msg: "Email not found" });
+      if (!identifier || !password) {
+        return res.status(400).json({ msg: "Identifier and password are required" });
       }
   
-        const match = await bcrypt.compare(req.body.password, user[0].password);
-        if(!match) return res.status(400).json({msg: "Wrong Password"});
-        const userId = user[0].id;
-        const username = user[0].username;
-        const email = user[0].email;
-        const accessToken = generateToken(userId);
-        res.json({
-            userId: userId,
-            username: username,
-            email: email,
-            accessToken: accessToken
-          });
+      // Check if the identifier is an email
+      let user = await Users.findAll({
+        where: {
+          email: identifier,
+        },
+      });
+  
+      // If the identifier is not an email, check if it's a username
+      if (user.length === 0) {
+        user = await Users.findAll({
+          where: {
+            username: identifier,
+          },
+        });
+      }
+  
+      // Check if the user with the specified email or username exists
+      if (user.length === 0) {
+        return res.status(404).json({ msg: "User not found" });
+      }
+  
+      const match = await bcrypt.compare(password, user[0].password);
+      if (!match) return res.status(400).json({ msg: "Wrong Password" });
+  
+      const userId = user[0].id;
+      const username = user[0].username;
+      const email = user[0].email;
+      const accessToken = generateToken(userId);
+  
+      res.json({
+        userId: userId,
+        username: username,
+        email: email,
+        accessToken: accessToken,
+      });
     } catch (error) {
-        console.log(error);
-        res.status(404).json({msg:"Email not found"});
+      console.log(error);
+      res.status(500).json({ msg: "Internal Server Error" });
     }
-}
+  };
+  
  
 const Logout = async(req, res) => {
     const refreshToken = req.cookies.refreshToken;
