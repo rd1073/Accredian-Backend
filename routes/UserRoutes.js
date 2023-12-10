@@ -1,14 +1,14 @@
 const express = require("express");
 
 const { getUsers, Register, Login, Logout } =require("../controllers/UserController.js");
-const { verifyToken } =require( "../config.js/VerifyToken.js");
-const { refreshToken } =require( "../config.js/RefreshToken.js");
+//const { verifyToken } =require( "../config.js/VerifyToken.js");
+//const { refreshToken } =require( "../config.js/RefreshToken.js");
  
 const router = express.Router();
-const authMiddleware = require('../config.js/authMiddleware.js');
+//const authMiddleware = require('../config.js/authMiddleware.js');
 const { Users } = require('../config.js/UserModel.js');
-
-router.route("/user").get(authMiddleware, async (req, res) => {
+const protect=require("../config.js/protect.js");
+{/*router.route("/user").get(authMiddleware, async (req, res) => {
     try {
       res.status(200).json({ user: req.user });
     } catch (error) {
@@ -16,14 +16,16 @@ router.route("/user").get(authMiddleware, async (req, res) => {
       res.status(500).json({ message: 'Internal Server Error' });
     }
   });
-  
+*/}
+
+ 
+
 router.route("/register").post(Register);
  
 router.route("/login")
 .post(Login);
 
-router.route("/token")
-.get(refreshToken);
+//router.route("/token").get(refreshToken);
 
 router.route("/logout")
 .delete(Logout);

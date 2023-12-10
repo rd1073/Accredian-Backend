@@ -1,6 +1,7 @@
 const {Users}=require( "../config.js/UserModel");
 const bcrypt=require("bcrypt");
 const jwt = require("jsonwebtoken");
+const generateToken = require("../config.js/token");
  
  const getUsers = async(req, res) => {
     try {
@@ -31,9 +32,13 @@ const jwt = require("jsonwebtoken");
  
 const Login = async(req, res) => {
     try {
+         console.log("Request Body:", req.body);
+
+  
+       
         const user = await Users.findAll({
             where:{
-                email: req.body.email
+                email:req.body.email
             },
         });
 
@@ -47,22 +52,13 @@ const Login = async(req, res) => {
         const userId = user[0].id;
         const username = user[0].username;
         const email = user[0].email;
-        const accessToken = jwt.sign({userId, username, email}, "abcd",{
-            expiresIn: '15s'
-        });
-        const refreshToken = jwt.sign({userId, username, email}, "abcd",{
-            expiresIn: '1d'
-        });
-        await Users.update({refresh_token: refreshToken},{
-            where:{
-                id: userId
-            }
-        });
-        res.cookie('refreshToken', refreshToken,{
-            httpOnly: true,
-            maxAge: 24 * 60 * 60 * 1000
-        });
-        res.json({ accessToken });
+        const accessToken = generateToken(userId);
+        res.json({
+            userId: userId,
+            username: username,
+            email: email,
+            accessToken: accessToken
+          });
     } catch (error) {
         console.log(error);
         res.status(404).json({msg:"Email not found"});
