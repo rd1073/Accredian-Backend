@@ -5,9 +5,19 @@ const { verifyToken } =require( "../config.js/VerifyToken.js");
 const { refreshToken } =require( "../config.js/RefreshToken.js");
  
 const router = express.Router();
- 
-router.route("/user").get(verifyToken, getUsers)
-router.route("/users").post(Register);
+const authMiddleware = require('../config.js/authMiddleware.js');
+const { Users } = require('../config.js/UserModel.js');
+
+router.route("/user").get(authMiddleware, async (req, res) => {
+    try {
+      res.status(200).json({ user: req.user });
+    } catch (error) {
+      console.error('Error fetching user:', error);
+      res.status(500).json({ message: 'Internal Server Error' });
+    }
+  });
+  
+router.route("/register").post(Register);
  
 router.route("/login")
 .post(Login);
